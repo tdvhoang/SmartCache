@@ -10,32 +10,33 @@ import Foundation
 
 private let KeepTimeInterval: TimeInterval = 2 * 60
 private let CheckInterval: TimeInterval = 30
-typealias SmartCacheFactoryCallback<T> = (() -> T)
-protocol SmartInitializable {
+public typealias SmartCacheFactoryCallback<T> = (() -> T)
+public protocol SmartInitializable {
     init()
 }
 
-protocol StaticSmartInitializable {
+public protocol StaticSmartInitializable {
     static func getInstance() -> Self
 }
 
-let smartCache = SmartCache.shared
+public let smartCache = SmartCache.shared
+
 /// Class to cache and re-use instance in 'keepTime'
-class SmartCache {
+public final class SmartCache {
     private init() { }
-    static let shared = SmartCache()
+    public static let shared = SmartCache()
     
     private var caches = [CacheItem]()
     private var factories = [Any]()
     private var timer: Timer?
     
-    var printDebugLog = false
+    public var printDebugLog = false
     
-    func register<T>(_ handler: @escaping SmartCacheFactoryCallback<T>) {
+    public func register<T>(_ handler: @escaping SmartCacheFactoryCallback<T>) {
         factories.append(Factory(factory: handler))
     }
     
-    func resolve<T>(_ type: T.Type, keepTime: TimeInterval? = nil) -> T {
+    public func resolve<T>(_ type: T.Type, keepTime: TimeInterval? = nil) -> T {
         return resolve(type, keepTime: keepTime) {
             let factory = factories.first { ($0 as? Factory<T>) != nil }
             if let factory = factory as? Factory<T> {
@@ -45,25 +46,25 @@ class SmartCache {
         }
     }
     
-    func resolve<T: SmartInitializable>(_ type: T.Type, keepTime: TimeInterval? = nil) -> T {
+    public func resolve<T: SmartInitializable>(_ type: T.Type, keepTime: TimeInterval? = nil) -> T {
         return resolve(type, keepTime: keepTime) {
             type.init()
         }
     }
     
-    func resolve<T: StaticSmartInitializable>(_ type: T.Type, keepTime: TimeInterval? = nil) -> T {
+    public func resolve<T: StaticSmartInitializable>(_ type: T.Type, keepTime: TimeInterval? = nil) -> T {
         return resolve(type, keepTime: keepTime) {
             type.getInstance()
         }
     }
     
-    func resolve<T: NSObject>(_ type: T.Type, keepTime: TimeInterval? = nil) -> T {
+    public func resolve<T: NSObject>(_ type: T.Type, keepTime: TimeInterval? = nil) -> T {
         return resolve(type, keepTime: keepTime) {
             type.init()
         }
     }
     
-    func resolve<T>(_ type: T.Type, keepTime: TimeInterval? = nil, factory: SmartCacheFactoryCallback<T>) -> T {
+    public func resolve<T>(_ type: T.Type, keepTime: TimeInterval? = nil, factory: SmartCacheFactoryCallback<T>) -> T {
         let cacheItem: CacheItem
         if let first = caches.first(where: { $0.instance is T }) {
             cacheItem = first
@@ -105,7 +106,7 @@ class SmartCache {
     }
 }
 
-private class CacheItem {
+private final class CacheItem {
     let instance: Any
     var lastAccessDate: Date
     var keepTimeInterval: TimeInterval
